@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: venom-md-session
+    runtime: node
+    plan: free
+    region: frankfurt          # closest free region to Nigeria
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 20.18.0

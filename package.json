@@ -1,0 +1,28 @@
+{
+  "name": "venom-md-session",
+  "version": "1.0.0",
+  "main": "server.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "description": "QR + pairing code session generator for VENOM MD BOT",
+  "dependencies": {
+    "@hapi/boom": "^10.0.1",
+    "archiver": "^8.0.0",
+    "baileys": "^7.0.0-rc14",
+    "express": "^5.2.1",
+    "pino": "^10.3.1",
+    "qrcode": "^1.5.4"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

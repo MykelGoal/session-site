@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VENOM MD — Session Generator</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#070b16; --card:#0e1424; --card2:#131b2e; --line:#1e2942;
+    --txt:#e8edf7; --dim:#8b9ab5; --accent:#00e5a0; --accent2:#7c5cff;
+    --danger:#ff5c72; --warn:#ffb84d;
+  }
+  body{
+    font-family:'Segoe UI',system-ui,-apple-system,Roboto,sans-serif;
+    background:var(--bg); color:var(--txt); min-height:100vh; padding:20px 16px 60px;
+    background-image:
+      radial-gradient(circle at 12% 8%, rgba(124,92,255,.16), transparent 42%),
+      radial-gradient(circle at 88% 92%, rgba(0,229,160,.13), transparent 42%);
+  }
+  .wrap{max-width:520px;margin:0 auto}
+  header{text-align:center;margin:22px 0 30px}
+  .logo{
+    font-size:32px;font-weight:800;letter-spacing:-.5px;
+    background:linear-gradient(120deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .tag{color:var(--dim);font-size:13.5px;margin-top:7px}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:24px;margin-bottom:16px;
+  }
+  h2{font-size:16px;margin-bottom:16px;display:flex;align-items:center;gap:9px}
+  .tabs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+  .tab{
+    padding:13px;border-radius:12px;border:1px solid var(--line);background:var(--card2);
+    color:var(--dim);cursor:pointer;font-size:14px;font-weight:600;text-align:center;
+    transition:.16s;font-family:inherit;
+  }
+  .tab:hover{border-color:#2c3a5c;color:var(--txt)}
+  .tab.on{background:linear-gradient(120deg,rgba(0,229,160,.16),rgba(124,92,255,.16));
+    border-color:var(--accent);color:var(--txt)}
+  label{display:block;font-size:12.5px;color:var(--dim);margin-bottom:7px;font-weight:600}
+  input{
+    width:100%;padding:14px;border-radius:12px;border:1px solid var(--line);
+    background:var(--card2);color:var(--txt);font-size:16px;font-family:inherit;outline:none;
+  }
+  input:focus{border-color:var(--accent)}
+  .hint{font-size:11.5px;color:var(--dim);margin-top:7px;line-height:1.5}
+  .btn{
+    width:100%;padding:15px;border:none;border-radius:12px;cursor:pointer;
+    background:linear-gradient(120deg,var(--accent),var(--accent2));
+    color:#05121a;font-weight:800;font-size:15px;margin-top:18px;font-family:inherit;
+    transition:.16s;
+  }
+  .btn:hover{filter:brightness(1.08)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--dim)}
+  .hidden{display:none!important}
+  .center{text-align:center}
+  .qrbox{background:#fff;padding:14px;border-radius:16px;display:inline-block;margin:6px 0 14px}
+  .qrbox img{display:block;width:100%;max-width:288px;height:auto}
+  .code{
+    font-family:ui-monospace,'Courier New',monospace;font-size:34px;font-weight:800;
+    letter-spacing:5px;color:var(--accent);background:var(--card2);
+    border:1px dashed var(--accent);border-radius:14px;padding:20px;margin:8px 0 14px;
+    word-break:break-all;
+  }
+  .spinner{
+    width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--accent);
+    border-radius:50%;animation:spin .8s linear infinite;margin:18px auto;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .steps{list-style:none;counter-reset:s;margin-top:14px;text-align:left}
+  .steps li{
+    counter-increment:s;position:relative;padding:8px 0 8px 34px;
+    font-size:13.5px;color:var(--dim);line-height:1.55;
+  }
+  .steps li::before{
+    content:counter(s);position:absolute;left:0;top:8px;width:22px;height:22px;
+    background:var(--card2);border:1px solid var(--line);border-radius:50%;
+    display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--accent);
+  }
+  .sess{
+    background:#050a12;border:1px solid var(--line);border-radius:12px;padding:14px;
+    font-family:ui-monospace,'Courier New',monospace;font-size:11px;line-height:1.55;
+    color:var(--accent);word-break:break-all;max-height:170px;overflow-y:auto;margin:12px 0;
+    text-align:left;
+  }
+  .alert{
+    border-radius:12px;padding:14px;font-size:13px;line-height:1.6;margin-top:14px;text-align:left;
+  }
+  .alert.warn{background:rgba(255,184,77,.09);border:1px solid rgba(255,184,77,.35);color:#ffd699}
+  .alert.err{background:rgba(255,92,114,.09);border:1px solid rgba(255,92,114,.35);color:#ffb3bd}
+  .alert.ok{background:rgba(0,229,160,.09);border:1px solid rgba(0,229,160,.32);color:#8fffd6}
+  .timer{font-size:12px;color:var(--dim);margin-top:10px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  footer{text-align:center;color:var(--dim);font-size:11.5px;margin-top:26px;line-height:1.7}
+  .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);
+    margin-right:6px;animation:pulse 1.4s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .status{font-size:13.5px;color:var(--dim);margin-top:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo">VENOM MD</div>
+    <div class="tag">Session ID Generator · link your bot in seconds</div>
+  </header>
+
+  <!-- ---------- step 1: choose a method ---------- -->
+  <div class="card" id="setup">
+    <h2>🔗 Choose how to link</h2>
+    <div class="tabs">
+      <button class="tab on" id="tabQr">📷 QR Code</button>
+      <button class="tab" id="tabPair">🔢 Pairing Code</button>
+    </div>
+
+    <div id="numberField" class="hidden">
+      <label for="num">WhatsApp number (with country code)</label>
+      <input id="num" type="tel" inputmode="numeric" placeholder="2348012345678" autocomplete="off">
+      <div class="hint">Digits only — no +, no spaces, no leading zero.<br>Nigeria example: <b>2348012345678</b></div>
+    </div>
+
+    <div id="qrNote" class="hint" style="margin-top:4px">
+      A QR code will appear. Scan it with WhatsApp → Linked devices.
+    </div>
+
+    <button class="btn" id="go">Generate Session</button>
+  </div>
+
+  <!-- ---------- step 2: waiting / linking ---------- -->
+  <div class="card hidden center" id="linking">
+    <h2 style="justify-content:center">⏳ <span id="linkTitle">Connecting…</span></h2>
+
+    <div id="spin" class="spinner"></div>
+
+    <div id="qrWrap" class="hidden">
+      <div class="qrbox"><img id="qrImg" alt="WhatsApp QR code"></div>
+    </div>
+
+    <div id="codeWrap" class="hidden">
+      <div class="code" id="codeVal">— — — —</div>
+    </div>
+
+    <div class="status"><span class="dot"></span><span id="statusTxt">Starting…</span></div>
+
+    <ol class="steps" id="steps"></ol>
+
+    <div class="timer" id="timer"></div>
+    <button class="btn ghost" id="cancel">Cancel</button>
+  </div>
+
+  <!-- ---------- step 3: success ---------- -->
+  <div class="card hidden" id="done">
+    <h2>✅ Session created</h2>
+    <div class="alert ok">
+      Linked as <b id="whoJid">—</b>. Your session ID is below.
+    </div>
+
+    <div class="sess" id="sessVal"></div>
+
+    <div class="row">
+      <button class="btn" id="copy" style="margin-top:0">📋 Copy</button>
+      <button class="btn ghost" id="download" style="margin-top:0">⬇️ Download</button>
+    </div>
+
+    <div class="alert warn">
+      <b>⚠️ Treat this like a password.</b><br>
+      Anyone who has it can control your WhatsApp account. Never post it in a group,
+      a screenshot, or a public repo. If it leaks, open WhatsApp →
+      Linked devices and remove the device immediately.
+    </div>
+
+    <div class="alert warn" style="margin-top:10px">
+      <b>How to use it</b><br>
+      Save it as <b>SESSION_ID</b> in your bot's <b>.env</b>, or paste the decoded
+      contents into <b>session/creds.json</b>. See the README for both options.
+    </div>
+
+    <button class="btn ghost" id="again">Generate another</button>
+  </div>
+
+  <!-- ---------- error ---------- -->
+  <div class="card hidden" id="failed">
+    <h2>❌ Something went wrong</h2>
+    <div class="alert err" id="errTxt">Unknown error.</div>
+    <button class="btn" id="retry">Try again</button>
+  </div>
+
+  <footer>
+    Sessions are never stored on this server — they are generated in memory,
+    handed to you, then deleted.<br>
+    Unofficial tool. Not affiliated with WhatsApp or Meta.
+  </footer>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id)
+let method = 'qr'
+let sessionId = null
+let poll = null
+let ticker = null
+
+const STEPS = {
+  qr: [
+    'Open WhatsApp on your phone',
+    'Tap Settings → Linked devices',
+    'Tap "Link a device"',
+    'Scan the QR code above'
+  ],
+  pair: [
+    'Open WhatsApp on your phone',
+    'Tap Settings → Linked devices',
+    'Tap "Link with phone number instead"',
+    'Enter the 8-character code above'
+  ]
+}
+
+function show(which) {
+  for (const id of ['setup', 'linking', 'done', 'failed']) {
+    $(id).classList.toggle('hidden', id !== which)
+  }
+}
+
+$('tabQr').onclick = () => {
+  method = 'qr'
+  $('tabQr').classList.add('on'); $('tabPair').classList.remove('on')
+  $('numberField').classList.add('hidden')
+  $('qrNote').classList.remove('hidden')
+}
+$('tabPair').onclick = () => {
+  method = 'pair'
+  $('tabPair').classList.add('on'); $('tabQr').classList.remove('on')
+  $('numberField').classList.remove('hidden')
+  $('qrNote').classList.add('hidden')
+}
+
+$('go').onclick = async () => {
+  const number = $('num').value.replace(/\D/g, '')
+  if (method === 'pair' && (number.length < 8 || number.length > 15)) {
+    return fail('Enter a valid number with its country code, digits only.')
+  }
+
+  $('go').disabled = true
+  $('go').textContent = 'Starting…'
+
+  try {
+    const r = await fetch('/api/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ method, number })
+    })
+    const data = await r.json()
+    if (!r.ok) throw new Error(data.error || 'Could not start a session')
+
+    sessionId = data.id
+    $('linkTitle').textContent = method === 'qr' ? 'Scan the QR code' : 'Enter the pairing code'
+    $('steps').innerHTML = STEPS[method].map((s) => `<li>${s}</li>`).join('')
+    show('linking')
+    startPolling()
+  } catch (e) {
+    fail(e.message)
+  } finally {
+    $('go').disabled = false
+    $('go').textContent = 'Generate Session'
+  }
+}
+
+function startPolling() {
+  let left = 300
+  clearInterval(ticker)
+  ticker = setInterval(() => {
+    left--
+    const m = Math.floor(left / 60), s = left % 60
+    $('timer').textContent = `Expires in ${m}:${String(s).padStart(2, '0')}`
+    if (left <= 0) { stop(); fail('This attempt expired. Please start again.') }
+  }, 1000)
+
+  clearInterval(poll)
+  poll = setInterval(check, 1800)
+  check()
+}
+
+async function check() {
+  if (!sessionId) return
+  try {
+    const r = await fetch('/api/session/' + sessionId)
+    const d = await r.json()
+    if (!r.ok) throw new Error(d.error || 'Session lost')
+
+    $('statusTxt').textContent = {
+      starting: 'Connecting to WhatsApp…',
+      qr: 'Waiting for you to scan…',
+      pairing: 'Waiting for the code to be entered…',
+      connected: 'Linked. Preparing your session…',
+      done: 'Done.',
+      error: 'Failed',
+      expired: 'Expired'
+    }[d.status] || d.status
+
+    if (d.qrImage) {
+      $('spin').classList.add('hidden')
+      $('qrWrap').classList.remove('hidden')
+      $('qrImg').src = d.qrImage
+    }
+    if (d.code) {
+      $('spin').classList.add('hidden')
+      $('codeWrap').classList.remove('hidden')
+      $('codeVal').textContent = d.code
+    }
+
+    if (d.status === 'done' && d.creds) {
+      stop()
+      $('whoJid').textContent = d.jid ? '+' + d.jid : 'your account'
+      $('sessVal').textContent = d.creds
+      show('done')
+    }
+    if (d.status === 'error' || d.status === 'expired') {
+      stop()
+      fail(d.error || 'The link attempt ended before it completed.')
+    }
+  } catch (e) {
+    stop()
+    fail(e.message)
+  }
+}
+
+function stop() { clearInterval(poll); clearInterval(ticker); poll = ticker = null }
+
+function fail(msg) {
+  $('errTxt').textContent = msg
+  show('failed')
+}
+
+$('cancel').onclick = async () => {
+  stop()
+  if (sessionId) await fetch('/api/session/' + sessionId, { method: 'DELETE' }).catch(() => {})
+  sessionId = null
+  resetUi()
+  show('setup')
+}
+
+$('retry').onclick = () => { resetUi(); show('setup') }
+$('again').onclick = () => { resetUi(); show('setup') }
+
+function resetUi() {
+  $('spin').classList.remove('hidden')
+  $('qrWrap').classList.add('hidden')
+  $('codeWrap').classList.add('hidden')
+  $('qrImg').src = ''
+  $('timer').textContent = ''
+}
+
+$('copy').onclick = async () => {
+  const text = $('sessVal').textContent
+  try {
+    await navigator.clipboard.writeText(text)
+    $('copy').textContent = '✅ Copied'
+  } catch {
+    // clipboard API needs https - fall back to a manual selection
+    const r = document.createRange()
+    r.selectNodeContents($('sessVal'))
+    const sel = window.getSelection()
+    sel.removeAllRanges(); sel.addRange(r)
+    $('copy').textContent = '👆 Now press Ctrl+C'
+  }
+  setTimeout(() => ($('copy').textContent = '📋 Copy'), 2500)
+}
+
+$('download').onclick = () => {
+  const b64 = $('sessVal').textContent
+  let json = b64
+  try { json = atob(b64) } catch {}
+  const blob = new Blob([json], { type: 'application/json' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = 'creds.json'
+  a.click()
+  URL.revokeObjectURL(a.href)
+}
+</script>
+</body>
+</html>
