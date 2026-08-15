@@ -2,271 +2,632 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>VENOM MD — Session Generator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#050806">
+<title>VENOM MD · WhatsApp Bot &amp; Session Generator</title>
+<meta name="description" content="Generate your VENOM MD WhatsApp session with a QR code or an 8-digit pairing code. 464 commands, Baileys v7, deploy free.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐍</text></svg>">
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
   :root{
-    --bg:#070b16; --card:#0e1424; --card2:#131b2e; --line:#1e2942;
-    --txt:#e8edf7; --dim:#8b9ab5; --accent:#00e5a0; --accent2:#7c5cff;
-    --danger:#ff5c72; --warn:#ffb84d;
+    --bg:#050806;
+    --bg2:#0a0f0c;
+    --panel:rgba(14,22,17,.72);
+    --line:rgba(57,255,136,.14);
+    --line2:rgba(57,255,136,.32);
+    --venom:#39ff88;
+    --venom2:#00d95f;
+    --acid:#b6ff3c;
+    --txt:#e6fff0;
+    --dim:#7d9a89;
+    --dim2:#546b5e;
+    --danger:#ff4d5e;
+    --warn:#ffc53d;
+    --r:16px;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
   }
+
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+
   body{
-    font-family:'Segoe UI',system-ui,-apple-system,Roboto,sans-serif;
-    background:var(--bg); color:var(--txt); min-height:100vh; padding:20px 16px 60px;
+    font-family:var(--sans);
+    background:var(--bg);
+    color:var(--txt);
+    line-height:1.6;
+    min-height:100vh;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ── ambient background ───────────────────────────── */
+  .bg{position:fixed;inset:0;z-index:-2;overflow:hidden;background:var(--bg)}
+  .bg::before{
+    content:'';position:absolute;inset:-40%;
+    background:
+      radial-gradient(closest-side,rgba(57,255,136,.26),transparent 70%) 18% 12%/62% 62% no-repeat,
+      radial-gradient(closest-side,rgba(0,217,95,.20),transparent 70%) 82% 78%/58% 58% no-repeat,
+      radial-gradient(closest-side,rgba(182,255,60,.07),transparent 70%) 50% 50%/70% 70% no-repeat;
+    filter:blur(20px);
+    animation:drift 26s ease-in-out infinite alternate;
+  }
+  @keyframes drift{
+    from{transform:translate3d(-2%,-1%,0) scale(1)}
+    to{transform:translate3d(3%,2%,0) scale(1.08)}
+  }
+  .grid{
+    position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.35;
     background-image:
-      radial-gradient(circle at 12% 8%, rgba(124,92,255,.16), transparent 42%),
-      radial-gradient(circle at 88% 92%, rgba(0,229,160,.13), transparent 42%);
+      linear-gradient(rgba(57,255,136,.045) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(57,255,136,.045) 1px,transparent 1px);
+    background-size:52px 52px;
+    mask-image:radial-gradient(ellipse 90% 60% at 50% 0%,#000 30%,transparent 78%);
+    -webkit-mask-image:radial-gradient(ellipse 90% 60% at 50% 0%,#000 30%,transparent 78%);
   }
-  .wrap{max-width:520px;margin:0 auto}
-  header{text-align:center;margin:22px 0 30px}
-  .logo{
-    font-size:32px;font-weight:800;letter-spacing:-.5px;
-    background:linear-gradient(120deg,var(--accent),var(--accent2));
-    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+
+  .wrap{width:100%;max-width:1120px;margin:0 auto;padding:0 22px}
+
+  /* ── nav ──────────────────────────────────────────── */
+  nav{
+    position:sticky;top:0;z-index:60;
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    background:rgba(5,8,6,.82);
+    border-bottom:1px solid var(--line);
   }
-  .tag{color:var(--dim);font-size:13.5px;margin-top:7px}
-  .card{
-    background:var(--card);border:1px solid var(--line);border-radius:18px;
-    padding:24px;margin-bottom:16px;
+  .nav-in{display:flex;align-items:center;justify-content:space-between;height:62px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.4px;font-size:1.02rem}
+  .brand-mark{
+    width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:16px;
+    background:linear-gradient(140deg,var(--venom),var(--venom2));
+    box-shadow:0 0 18px rgba(57,255,136,.5);
   }
-  h2{font-size:16px;margin-bottom:16px;display:flex;align-items:center;gap:9px}
-  .tabs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
-  .tab{
-    padding:13px;border-radius:12px;border:1px solid var(--line);background:var(--card2);
-    color:var(--dim);cursor:pointer;font-size:14px;font-weight:600;text-align:center;
-    transition:.16s;font-family:inherit;
+  .brand span{color:var(--venom)}
+  .nav-links{display:flex;gap:26px;align-items:center}
+  .nav-links a{color:var(--dim);text-decoration:none;font-size:.9rem;font-weight:500;transition:color .18s}
+  .nav-links a:hover{color:var(--venom)}
+  @media(max-width:720px){.nav-links a:not(.nav-cta){display:none}}
+  .nav-cta{
+    padding:8px 16px;border-radius:9px;font-weight:700;font-size:.86rem;
+    background:linear-gradient(140deg,var(--venom),var(--venom2));
+    color:#04140b !important;box-shadow:0 4px 18px rgba(57,255,136,.28);
   }
-  .tab:hover{border-color:#2c3a5c;color:var(--txt)}
-  .tab.on{background:linear-gradient(120deg,rgba(0,229,160,.16),rgba(124,92,255,.16));
-    border-color:var(--accent);color:var(--txt)}
-  label{display:block;font-size:12.5px;color:var(--dim);margin-bottom:7px;font-weight:600}
-  input{
-    width:100%;padding:14px;border-radius:12px;border:1px solid var(--line);
-    background:var(--card2);color:var(--txt);font-size:16px;font-family:inherit;outline:none;
+  .nav-cta:hover{filter:brightness(1.08)}
+
+  /* ── hero ─────────────────────────────────────────── */
+  header{padding:78px 0 34px;text-align:center;position:relative}
+  .pill{
+    display:inline-flex;align-items:center;gap:9px;
+    padding:6px 15px;border-radius:999px;
+    border:1px solid var(--line2);background:rgba(57,255,136,.07);
+    font-size:.79rem;font-weight:600;color:var(--venom);
+    letter-spacing:.4px;margin-bottom:24px;
   }
-  input:focus{border-color:var(--accent)}
-  .hint{font-size:11.5px;color:var(--dim);margin-top:7px;line-height:1.5}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--venom);box-shadow:0 0 9px var(--venom);animation:blink 2s ease-in-out infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+
+  h1{
+    font-size:clamp(2.5rem,7.5vw,4.4rem);
+    line-height:1.03;font-weight:850;letter-spacing:-2px;margin-bottom:20px;
+  }
+  .glow{
+    background:linear-gradient(120deg,var(--venom) 0%,var(--acid) 45%,var(--venom2) 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 0 26px rgba(57,255,136,.4));
+  }
+  .sub{
+    font-size:clamp(1rem,2.4vw,1.16rem);color:var(--dim);
+    max-width:620px;margin:0 auto 34px;
+  }
+  .sub b{color:var(--txt);font-weight:650}
+
+  .cta-row{display:flex;gap:13px;justify-content:center;flex-wrap:wrap;margin-bottom:54px}
   .btn{
-    width:100%;padding:15px;border:none;border-radius:12px;cursor:pointer;
-    background:linear-gradient(120deg,var(--accent),var(--accent2));
-    color:#05121a;font-weight:800;font-size:15px;margin-top:18px;font-family:inherit;
-    transition:.16s;
+    display:inline-flex;align-items:center;gap:9px;
+    padding:14px 28px;border-radius:12px;border:none;cursor:pointer;
+    font-family:inherit;font-size:.97rem;font-weight:700;text-decoration:none;
+    transition:transform .16s,box-shadow .16s,filter .16s;
   }
-  .btn:hover{filter:brightness(1.08)}
-  .btn:disabled{opacity:.5;cursor:not-allowed}
-  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--dim)}
-  .hidden{display:none!important}
-  .center{text-align:center}
-  .qrbox{background:#fff;padding:14px;border-radius:16px;display:inline-block;margin:6px 0 14px}
-  .qrbox img{display:block;width:100%;max-width:288px;height:auto}
+  .btn-main{
+    background:linear-gradient(140deg,var(--venom),var(--venom2));
+    color:#04140b;box-shadow:0 8px 30px rgba(57,255,136,.32);
+  }
+  .btn-main:hover{transform:translateY(-2px);box-shadow:0 12px 38px rgba(57,255,136,.45)}
+  .btn-ghost{background:rgba(255,255,255,.03);color:var(--txt);border:1px solid var(--line2)}
+  .btn-ghost:hover{background:rgba(57,255,136,.09);transform:translateY(-2px)}
+  .btn:disabled{opacity:.45;cursor:not-allowed;transform:none !important}
+
+  .stats{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+  .stat{
+    min-width:132px;padding:19px 22px;border-radius:14px;
+    background:var(--panel);border:1px solid var(--line);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  }
+  .stat-n{font-size:1.85rem;font-weight:830;color:var(--venom);font-family:var(--mono);line-height:1}
+  .stat-l{font-size:.73rem;color:var(--dim2);text-transform:uppercase;letter-spacing:1.3px;margin-top:7px;font-weight:600}
+
+  /* ── sections ─────────────────────────────────────── */
+  section{padding:56px 0;scroll-margin-top:70px}
+  .sec-head{text-align:center;margin-bottom:44px}
+  .sec-tag{
+    font-size:.75rem;font-weight:700;color:var(--venom);
+    text-transform:uppercase;letter-spacing:2.2px;margin-bottom:11px;
+  }
+  .sec-head h2{font-size:clamp(1.7rem,4.2vw,2.4rem);font-weight:800;letter-spacing:-.8px;margin-bottom:11px}
+  .sec-head p{color:var(--dim);max-width:540px;margin:0 auto;font-size:1rem}
+
+  /* ── generator card ───────────────────────────────── */
+  .gen{
+    max-width:520px;margin:0 auto;
+    background:var(--panel);border:1px solid var(--line2);border-radius:22px;
+    padding:30px;position:relative;overflow:hidden;
+    backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    box-shadow:0 24px 70px rgba(0,0,0,.55),0 0 0 1px rgba(57,255,136,.05) inset;
+  }
+  .gen::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:1px;
+    background:linear-gradient(90deg,transparent,var(--venom),transparent);
+  }
+
+  .tabs{display:grid;grid-template-columns:1fr 1fr;gap:7px;background:rgba(0,0,0,.35);padding:5px;border-radius:13px;margin-bottom:22px}
+  .tab{
+    padding:11px;border:none;border-radius:9px;cursor:pointer;
+    background:transparent;color:var(--dim);font-family:inherit;font-size:.9rem;font-weight:650;
+    transition:all .18s;display:flex;align-items:center;justify-content:center;gap:7px;
+  }
+  .tab.on{background:linear-gradient(140deg,var(--venom),var(--venom2));color:#04140b;box-shadow:0 3px 14px rgba(57,255,136,.3)}
+  .tab:not(.on):hover{color:var(--txt);background:rgba(255,255,255,.04)}
+
+  label{display:block;font-size:.79rem;font-weight:700;color:var(--dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px}
+  input[type=tel]{
+    width:100%;padding:14px 16px;border-radius:11px;
+    border:1px solid var(--line2);background:rgba(0,0,0,.4);
+    color:var(--txt);font-family:var(--mono);font-size:1.04rem;letter-spacing:.6px;
+    transition:border-color .18s,box-shadow .18s;
+  }
+  input[type=tel]:focus{outline:none;border-color:var(--venom);box-shadow:0 0 0 3px rgba(57,255,136,.14)}
+  input::placeholder{color:var(--dim2)}
+  .hint{font-size:.79rem;color:var(--dim2);margin-top:8px;line-height:1.5}
+  #numberBox{margin-bottom:20px}
+  .hidden{display:none !important}
+
+  #go{width:100%;justify-content:center;padding:15px}
+
+  .method-note{
+    display:flex;gap:13px;align-items:flex-start;
+    padding:15px;border-radius:12px;margin-bottom:20px;
+    background:rgba(57,255,136,.05);border:1px solid var(--line);
+  }
+  .mn-ico{
+    flex:0 0 34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:16px;
+    background:rgba(57,255,136,.1);border:1px solid var(--line2);
+  }
+  .method-note b{font-size:.9rem;font-weight:700;display:block;margin-bottom:3px}
+  .method-note p{font-size:.83rem;color:var(--dim);line-height:1.55}
+
+  .trust{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:16px}
+  .trust-item{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:.76rem;color:var(--dim2);font-weight:600;
+  }
+  .trust-item span{font-size:.9rem}
+
+  /* ── live states ──────────────────────────────────── */
+  .stage{text-align:center;padding:8px 0}
+  .qr-frame{
+    width:270px;height:270px;margin:0 auto 18px;padding:13px;
+    background:#fff;border-radius:17px;position:relative;
+    box-shadow:0 0 46px rgba(57,255,136,.28);
+  }
+  .qr-frame img{width:100%;height:100%;display:block;border-radius:7px}
+  .scanline{
+    position:absolute;left:13px;right:13px;height:2px;border-radius:2px;
+    background:linear-gradient(90deg,transparent,var(--venom2),transparent);
+    box-shadow:0 0 12px var(--venom);
+    animation:scan 2.6s ease-in-out infinite;
+  }
+  @keyframes scan{0%,100%{top:14px}50%{top:calc(100% - 16px)}}
+
   .code{
-    font-family:ui-monospace,'Courier New',monospace;font-size:34px;font-weight:800;
-    letter-spacing:5px;color:var(--accent);background:var(--card2);
-    border:1px dashed var(--accent);border-radius:14px;padding:20px;margin:8px 0 14px;
-    word-break:break-all;
+    font-family:var(--mono);font-size:clamp(2rem,9vw,2.9rem);font-weight:800;
+    letter-spacing:7px;color:var(--venom);
+    padding:22px;border-radius:15px;margin-bottom:16px;
+    background:rgba(57,255,136,.07);border:1px dashed var(--line2);
+    text-shadow:0 0 26px rgba(57,255,136,.55);
+    cursor:pointer;user-select:all;word-break:break-all;
   }
-  .spinner{
-    width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--accent);
-    border-radius:50%;animation:spin .8s linear infinite;margin:18px auto;
+  .code:hover{background:rgba(57,255,136,.12)}
+
+  .spin{
+    width:44px;height:44px;margin:26px auto;border-radius:50%;
+    border:3px solid rgba(57,255,136,.16);border-top-color:var(--venom);
+    animation:spin .85s linear infinite;
   }
   @keyframes spin{to{transform:rotate(360deg)}}
-  .steps{list-style:none;counter-reset:s;margin-top:14px;text-align:left}
-  .steps li{
-    counter-increment:s;position:relative;padding:8px 0 8px 34px;
-    font-size:13.5px;color:var(--dim);line-height:1.55;
+
+  .status{
+    display:inline-flex;align-items:center;gap:9px;
+    padding:9px 17px;border-radius:999px;font-size:.87rem;font-weight:600;
+    background:rgba(57,255,136,.09);border:1px solid var(--line2);color:var(--venom);
   }
-  .steps li::before{
-    content:counter(s);position:absolute;left:0;top:8px;width:22px;height:22px;
-    background:var(--card2);border:1px solid var(--line);border-radius:50%;
-    display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--accent);
+  .timer{font-family:var(--mono);font-size:.83rem;color:var(--dim2);margin-top:13px}
+
+  .steps{text-align:left;margin:20px auto 0;max-width:330px}
+  .step{display:flex;gap:12px;padding:8px 0;font-size:.88rem;color:var(--dim);align-items:flex-start}
+  .step-n{
+    flex:0 0 21px;height:21px;border-radius:50%;background:rgba(57,255,136,.13);
+    color:var(--venom);font-size:.72rem;font-weight:800;display:grid;place-items:center;margin-top:1px;
   }
-  .sess{
-    background:#050a12;border:1px solid var(--line);border-radius:12px;padding:14px;
-    font-family:ui-monospace,'Courier New',monospace;font-size:11px;line-height:1.55;
-    color:var(--accent);word-break:break-all;max-height:170px;overflow-y:auto;margin:12px 0;
-    text-align:left;
+
+  /* ── result ───────────────────────────────────────── */
+  .ok-mark{font-size:2.9rem;margin-bottom:8px;animation:pop .45s cubic-bezier(.34,1.56,.64,1)}
+  @keyframes pop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+  .sid{
+    font-family:var(--mono);font-size:.71rem;line-height:1.55;color:var(--venom);
+    background:rgba(0,0,0,.5);border:1px solid var(--line2);border-radius:11px;
+    padding:14px;max-height:130px;overflow-y:auto;word-break:break-all;
+    text-align:left;margin:14px 0;
   }
-  .alert{
-    border-radius:12px;padding:14px;font-size:13px;line-height:1.6;margin-top:14px;text-align:left;
+  .sid::-webkit-scrollbar{width:5px}
+  .sid::-webkit-scrollbar-thumb{background:var(--line2);border-radius:3px}
+  .btn-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:6px}
+  .btn-sm{padding:11px;font-size:.85rem;border-radius:10px;justify-content:center}
+
+  .note{
+    display:flex;gap:10px;padding:13px 15px;border-radius:11px;font-size:.83rem;
+    text-align:left;line-height:1.55;margin-top:15px;
   }
-  .alert.warn{background:rgba(255,184,77,.09);border:1px solid rgba(255,184,77,.35);color:#ffd699}
-  .alert.err{background:rgba(255,92,114,.09);border:1px solid rgba(255,92,114,.35);color:#ffb3bd}
-  .alert.ok{background:rgba(0,229,160,.09);border:1px solid rgba(0,229,160,.32);color:#8fffd6}
-  .timer{font-size:12px;color:var(--dim);margin-top:10px}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-  footer{text-align:center;color:var(--dim);font-size:11.5px;margin-top:26px;line-height:1.7}
-  .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);
-    margin-right:6px;animation:pulse 1.4s infinite}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-  .status{font-size:13.5px;color:var(--dim);margin-top:6px}
+  .note-warn{background:rgba(255,197,61,.08);border:1px solid rgba(255,197,61,.26);color:#ffd76e}
+  .note-err{background:rgba(255,77,94,.09);border:1px solid rgba(255,77,94,.3);color:#ff8b96}
+
+  /* ── features ─────────────────────────────────────── */
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:17px}
+  @media(max-width:980px){.cards{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:620px){.cards{grid-template-columns:1fr}}
+  .card{
+    padding:26px;border-radius:17px;background:var(--panel);border:1px solid var(--line);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    transition:transform .2s,border-color .2s,box-shadow .2s;
+  }
+  .card:hover{transform:translateY(-4px);border-color:var(--line2);box-shadow:0 16px 42px rgba(0,0,0,.4)}
+  .card-ico{
+    width:43px;height:43px;border-radius:12px;display:grid;place-items:center;
+    font-size:20px;margin-bottom:15px;
+    background:rgba(57,255,136,.1);border:1px solid var(--line2);
+  }
+  .card h3{font-size:1.04rem;font-weight:750;margin-bottom:8px}
+  .card p{font-size:.9rem;color:var(--dim);line-height:1.62}
+
+  /* ── categories ───────────────────────────────────── */
+  .cats{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;max-width:840px;margin:0 auto}
+  .cat{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:9px 15px;border-radius:10px;font-size:.85rem;font-weight:600;
+    background:var(--panel);border:1px solid var(--line);transition:all .18s;cursor:default;
+  }
+  .cat:hover{border-color:var(--line2);background:rgba(57,255,136,.07);transform:translateY(-2px)}
+  .cat b{color:var(--venom);font-family:var(--mono);font-size:.79rem}
+
+  /* ── deploy ───────────────────────────────────────── */
+  .deploy{
+    max-width:660px;margin:0 auto;padding:32px;border-radius:19px;
+    background:var(--panel);border:1px solid var(--line2);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  }
+  .dstep{display:flex;gap:15px;padding:15px 0;border-bottom:1px solid var(--line)}
+  .dstep:last-child{border-bottom:none}
+  .dnum{
+    flex:0 0 29px;height:29px;border-radius:9px;display:grid;place-items:center;
+    background:linear-gradient(140deg,var(--venom),var(--venom2));color:#04140b;font-weight:830;font-size:.85rem;
+  }
+  .dstep h4{font-size:.97rem;font-weight:700;margin-bottom:4px}
+  .dstep p{font-size:.88rem;color:var(--dim);line-height:1.6}
+  code{
+    font-family:var(--mono);font-size:.83em;padding:2px 7px;border-radius:5px;
+    background:rgba(57,255,136,.1);color:var(--venom);border:1px solid var(--line);
+  }
+
+  footer{
+    padding:44px 0 34px;text-align:center;border-top:1px solid var(--line);
+    color:var(--dim2);font-size:.86rem;margin-top:24px;
+  }
+  footer a{color:var(--venom);text-decoration:none}
+  footer a:hover{text-decoration:underline}
+  .foot-warn{
+    max-width:600px;margin:16px auto 0;font-size:.79rem;color:var(--dim2);
+    line-height:1.6;padding:13px;border-radius:10px;
+    background:rgba(255,77,94,.05);border:1px solid rgba(255,77,94,.16);
+  }
+
+  @media(max-width:600px){
+    header{padding:52px 0 42px}
+    .gen{padding:22px;border-radius:18px}
+    .qr-frame{width:238px;height:238px}
+    section{padding:50px 0}
+    .stat{min-width:114px;padding:15px 17px}
+    .stat-n{font-size:1.5rem}
+  }
+  @media(prefers-reduced-motion:reduce){
+    *{animation-duration:.01ms !important;transition-duration:.01ms !important}
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="bg"></div><div class="grid"></div>
 
-  <header>
-    <div class="logo">VENOM MD</div>
-    <div class="tag">Session ID Generator · link your bot in seconds</div>
-  </header>
-
-  <!-- ---------- step 1: choose a method ---------- -->
-  <div class="card" id="setup">
-    <h2>🔗 Choose how to link</h2>
-    <div class="tabs">
-      <button class="tab on" id="tabQr">📷 QR Code</button>
-      <button class="tab" id="tabPair">🔢 Pairing Code</button>
+<nav>
+  <div class="wrap nav-in">
+    <div class="brand"><div class="brand-mark">🐍</div>VENOM <span>MD</span></div>
+    <div class="nav-links">
+      <a href="#generate">Generate</a>
+      <a href="#features">Features</a>
+      <a href="#commands">Commands</a>
+      <a href="#deploy">Deploy</a>
+      <a href="#generate" class="nav-cta">Get Session</a>
     </div>
-
-    <div id="numberField" class="hidden">
-      <label for="num">WhatsApp number (with country code)</label>
-      <input id="num" type="tel" inputmode="numeric" placeholder="2348012345678" autocomplete="off">
-      <div class="hint">Digits only — no +, no spaces, no leading zero.<br>Nigeria example: <b>2348012345678</b></div>
-    </div>
-
-    <div id="qrNote" class="hint" style="margin-top:4px">
-      A QR code will appear. Scan it with WhatsApp → Linked devices.
-    </div>
-
-    <button class="btn" id="go">Generate Session</button>
   </div>
+</nav>
 
-  <!-- ---------- step 2: waiting / linking ---------- -->
-  <div class="card hidden center" id="linking">
-    <h2 style="justify-content:center">⏳ <span id="linkTitle">Connecting…</span></h2>
-
-    <div id="spin" class="spinner"></div>
-
-    <div id="qrWrap" class="hidden">
-      <div class="qrbox"><img id="qrImg" alt="WhatsApp QR code"></div>
+<header>
+  <div class="wrap">
+    <div class="pill"><span class="dot"></span> Baileys v7 · Multi-Device</div>
+    <h1>Your WhatsApp,<br><span class="glow">weaponised.</span></h1>
+    <p class="sub">
+      <b>464 commands</b> across 23 categories. AI, downloaders, stickers, group
+      control, economy and games — all in one bot. Link your session below in
+      under a minute.
+    </p>
+    <div class="cta-row">
+      <a href="#generate" class="btn btn-main">⚡ Generate Session</a>
+      <a href="#features" class="btn btn-ghost">Explore Features</a>
     </div>
-
-    <div id="codeWrap" class="hidden">
-      <div class="code" id="codeVal">— — — —</div>
+    <div class="stats">
+      <div class="stat"><div class="stat-n">464</div><div class="stat-l">Commands</div></div>
+      <div class="stat"><div class="stat-n">23</div><div class="stat-l">Categories</div></div>
+      <div class="stat"><div class="stat-n">8</div><div class="stat-l">AI Models</div></div>
+      <div class="stat"><div class="stat-n">100%</div><div class="stat-l">Free Hosting</div></div>
     </div>
-
-    <div class="status"><span class="dot"></span><span id="statusTxt">Starting…</span></div>
-
-    <ol class="steps" id="steps"></ol>
-
-    <div class="timer" id="timer"></div>
-    <button class="btn ghost" id="cancel">Cancel</button>
   </div>
+</header>
 
-  <!-- ---------- step 3: success ---------- -->
-  <div class="card hidden" id="done">
-    <h2>✅ Session created</h2>
-    <div class="alert ok">
-      Linked as <b id="whoJid">—</b>. Your session ID is below.
+<section id="generate">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-tag">Step One</div>
+      <h2>Link your session</h2>
+      <p>Scan a QR code or type an 8-digit pairing code. Either way you get a session ID for your bot.</p>
     </div>
 
-    <div class="sess" id="sessVal"></div>
+    <div class="gen">
+      <!-- form -->
+      <div id="form">
+        <div class="tabs">
+          <button class="tab on" data-m="qr" type="button">📷 QR Code</button>
+          <button class="tab" data-m="pair" type="button">🔢 Pairing Code</button>
+        </div>
 
-    <div class="row">
-      <button class="btn" id="copy" style="margin-top:0">📋 Copy</button>
-      <button class="btn ghost" id="download" style="margin-top:0">⬇️ Download</button>
+        <div id="numberBox" class="hidden">
+          <label for="num">WhatsApp number (with country code)</label>
+          <input id="num" type="tel" inputmode="numeric" placeholder="2348012345678" autocomplete="tel">
+          <div class="hint">Digits only — no +, spaces or dashes. Example: <code>234</code> for Nigeria.</div>
+        </div>
+
+        <div id="qrIntro">
+          <div class="method-note">
+            <div class="mn-ico">📷</div>
+            <div>
+              <b>Scan with your phone</b>
+              <p>We show you a QR code. Open WhatsApp → Linked devices → Link a device, then scan it.</p>
+            </div>
+          </div>
+        </div>
+
+        <button id="go" class="btn btn-main">⚡ Generate Session</button>
+
+        <div class="trust">
+          <div class="trust-item"><span>🔒</span> Deleted after delivery</div>
+          <div class="trust-item"><span>⏱️</span> Expires in 5 min</div>
+          <div class="trust-item"><span>🚫</span> Never stored</div>
+        </div>
+      </div>
+
+      <!-- live -->
+      <div id="live" class="stage hidden">
+        <div id="qrBox" class="hidden">
+          <div class="qr-frame"><img id="qrImg" alt="WhatsApp QR code"><div class="scanline"></div></div>
+        </div>
+        <div id="codeBox" class="hidden">
+          <div class="code" id="codeTxt" title="Tap to select">••••-••••</div>
+        </div>
+        <div id="spinBox"><div class="spin"></div></div>
+
+        <div class="status"><span class="dot"></span><span id="statusTxt">Starting…</span></div>
+        <div class="timer" id="timer">Expires in 5:00</div>
+
+        <div class="steps" id="steps"></div>
+
+        <button id="cancel" class="btn btn-ghost btn-sm" style="margin-top:20px;width:100%">Cancel</button>
+      </div>
+
+      <!-- done -->
+      <div id="done" class="stage hidden">
+        <div class="ok-mark">✅</div>
+        <h3 style="font-size:1.2rem;font-weight:750">Session ready</h3>
+        <p style="color:var(--dim);font-size:.9rem;margin-top:5px">Also sent to your WhatsApp.</p>
+        <div class="sid" id="sidTxt"></div>
+        <div class="btn-row">
+          <button id="copy" class="btn btn-main btn-sm">📋 Copy</button>
+          <button id="dl" class="btn btn-ghost btn-sm">⬇️ creds.json</button>
+        </div>
+        <div class="note note-warn">
+          <span>⚠️</span>
+          <div>Paste this as <code>SESSION_ID</code> in your bot's <code>.env</code>.
+          Anyone holding it controls your WhatsApp — never post it publicly.</div>
+        </div>
+        <button id="again" class="btn btn-ghost btn-sm" style="margin-top:11px;width:100%">Generate another</button>
+      </div>
+
+      <!-- error -->
+      <div id="err" class="stage hidden">
+        <div class="ok-mark">⚠️</div>
+        <h3 style="font-size:1.15rem;font-weight:750">Something went wrong</h3>
+        <div class="note note-err" style="margin-top:14px"><span>✕</span><div id="errTxt"></div></div>
+        <button id="retry" class="btn btn-main btn-sm" style="margin-top:15px;width:100%">Try again</button>
+      </div>
     </div>
-
-    <div class="alert warn">
-      <b>⚠️ Treat this like a password.</b><br>
-      Anyone who has it can control your WhatsApp account. Never post it in a group,
-      a screenshot, or a public repo. If it leaks, open WhatsApp →
-      Linked devices and remove the device immediately.
-    </div>
-
-    <div class="alert warn" style="margin-top:10px">
-      <b>How to use it</b><br>
-      Save it as <b>SESSION_ID</b> in your bot's <b>.env</b>, or paste the decoded
-      contents into <b>session/creds.json</b>. See the README for both options.
-    </div>
-
-    <button class="btn ghost" id="again">Generate another</button>
   </div>
+</section>
 
-  <!-- ---------- error ---------- -->
-  <div class="card hidden" id="failed">
-    <h2>❌ Something went wrong</h2>
-    <div class="alert err" id="errTxt">Unknown error.</div>
-    <button class="btn" id="retry">Try again</button>
+<section id="features">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-tag">Capabilities</div>
+      <h2>Everything, built in</h2>
+      <p>No paid APIs required to start. Add free keys when you want more power.</p>
+    </div>
+    <div class="cards">
+      <div class="card"><div class="card-ico">🤖</div><h3>8 AI providers</h3>
+        <p>Groq, Gemini, DeepSeek, Cerebras, OpenRouter, Mistral, Cohere and OpenAI with automatic failover. Add a free key and the bot picks the best one available.</p></div>
+      <div class="card"><div class="card-ico">⬇️</div><h3>Downloaders</h3>
+        <p>YouTube, TikTok without watermark, Twitter, Facebook, GitHub repos, MediaFire and 1800+ sites through yt-dlp.</p></div>
+      <div class="card"><div class="card-ico">🎨</div><h3>Stickers &amp; media</h3>
+        <p>Image and video stickers, 47 text effects rendered locally, meme overlays, 18 audio effects, PDF and format conversion.</p></div>
+      <div class="card"><div class="card-ico">🛡️</div><h3>Group control</h3>
+        <p>Antilink, antispam, antibot, word filters, warnings, welcome messages, auto-kick and full admin tooling.</p></div>
+      <div class="card"><div class="card-ico">💰</div><h3>Economy &amp; games</h3>
+        <p>Banking, loans, shop and inventory, robbery and heists, blackjack, slots, tic-tac-toe, hangman and word chain.</p></div>
+      <div class="card"><div class="card-ico">⚙️</div><h3>Zero-config start</h3>
+        <p>Runs on local JSON storage out of the box; point it at MongoDB when you scale. Hot-reloadable plugins.</p></div>
+    </div>
   </div>
+</section>
 
-  <footer>
-    Sessions are never stored on this server — they are generated in memory,
-    handed to you, then deleted.<br>
-    Unofficial tool. Not affiliated with WhatsApp or Meta.
-  </footer>
-</div>
+<section id="commands">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-tag">464 Commands</div>
+      <h2>23 categories</h2>
+      <p>Send <code>.menu</code> in any chat for the full list.</p>
+    </div>
+    <div class="cats" id="cats"></div>
+  </div>
+</section>
+
+<section id="deploy">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-tag">Hosting</div>
+      <h2>Deploy in four steps</h2>
+      <p>Free tiers on Render, Railway, Koyeb or any Node host.</p>
+    </div>
+    <div class="deploy">
+      <div class="dstep"><div class="dnum">1</div><div><h4>Generate your session</h4>
+        <p>Use the generator above and copy the session ID.</p></div></div>
+      <div class="dstep"><div class="dnum">2</div><div><h4>Fork the repository</h4>
+        <p>Push <code>venom-md-bot</code> to your own GitHub account.</p></div></div>
+      <div class="dstep"><div class="dnum">3</div><div><h4>Create a Web Service</h4>
+        <p>Connect the repo. Build <code>npm install &amp;&amp; npm run setup</code>, start <code>npm start</code>.</p></div></div>
+      <div class="dstep"><div class="dnum">4</div><div><h4>Set the environment</h4>
+        <p>Add <code>SESSION_ID</code>, <code>OWNER_NUMBER</code> and <code>OWNER_NAME</code>.
+        Optionally <code>MONGO_URI</code> and a free <code>GROQ_API_KEY</code>. Deploy.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="brand" style="justify-content:center;margin-bottom:11px"><div class="brand-mark">🐍</div>VENOM <span>MD</span></div>
+    <p>Built on <a href="https://github.com/WhiskeySockets/Baileys" target="_blank" rel="noopener">Baileys v7</a> · Not affiliated with WhatsApp or Meta</p>
+    <div class="foot-warn">
+      Sessions are generated on this server, delivered to you, then deleted — nothing is stored.
+      For maximum safety, self-host this generator. Automating WhatsApp carries a ban risk; use a spare number.
+    </div>
+  </div>
+</footer>
 
 <script>
-const $ = (id) => document.getElementById(id)
+const $ = id => document.getElementById(id)
 let method = 'qr'
 let sessionId = null
 let poll = null
 let ticker = null
-let left = 300   // seconds remaining, kept in sync with the server
+let left = 300
+let creds = null
+
+const CATS = [
+  ['HELP',1], ['AI',22], ['ANIME',10], ['FUN',58],
+  ['DOWNLOADER',19], ['CONVERTER',34], ['SEARCH',11], ['ECONOMY',38],
+  ['TEXTMAKER',48], ['GAME',8], ['GROUP',40], ['TOOLS',15],
+  ['IMAGE',10], ['IMAGE-MEME',28], ['BOT',14], ['PROCESS',3],
+  ['MISC',10], ['UTILITIES',32], ['PLUGINS',4], ['CONFIG',28],
+  ['USER',18], ['PRIVACY',8], ['AUTOREPLY',5]
+]
+$('cats').innerHTML = CATS.map(([n,c]) => `<div class="cat">${n} <b>${c}</b></div>`).join('')
 
 const STEPS = {
-  qr: [
-    'Open WhatsApp on your phone',
-    'Tap Settings → Linked devices',
-    'Tap "Link a device"',
-    'Scan the QR code above'
-  ],
-  pair: [
-    'Open WhatsApp on your phone',
-    'Tap Settings → Linked devices',
-    'Tap "Link with phone number instead"',
-    'Enter the 8-character code above'
-  ]
+  qr: ['Open WhatsApp on your phone','Tap Menu → Linked devices','Tap "Link a device"','Point your camera at the QR'],
+  pair:['Open WhatsApp on your phone','Tap Menu → Linked devices','Tap "Link with phone number instead"','Enter the 8-digit code above']
 }
+
+const METHOD_NOTE = {
+  qr: ['📷', 'Scan with your phone',
+       'We show you a QR code. Open WhatsApp → Linked devices → Link a device, then scan it.'],
+  pair: ['🔢', 'No camera needed',
+         'We give you an 8-digit code to type into WhatsApp. Useful when you cannot scan a screen.']
+}
+
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('on'))
+  t.classList.add('on')
+  method = t.dataset.m
+  $('numberBox').classList.toggle('hidden', method !== 'pair')
+  const [ico, title, body] = METHOD_NOTE[method]
+  $('qrIntro').innerHTML =
+    `<div class="method-note"><div class="mn-ico">${ico}</div>` +
+    `<div><b>${title}</b><p>${body}</p></div></div>`
+})
 
 function show(which) {
-  for (const id of ['setup', 'linking', 'done', 'failed']) {
-    $(id).classList.toggle('hidden', id !== which)
-  }
+  for (const id of ['form','live','done','err']) $(id).classList.toggle('hidden', id !== which)
 }
 
-$('tabQr').onclick = () => {
-  method = 'qr'
-  $('tabQr').classList.add('on'); $('tabPair').classList.remove('on')
-  $('numberField').classList.add('hidden')
-  $('qrNote').classList.remove('hidden')
+function fail(msg) {
+  stop()
+  $('errTxt').textContent = msg
+  show('err')
 }
-$('tabPair').onclick = () => {
-  method = 'pair'
-  $('tabPair').classList.add('on'); $('tabQr').classList.remove('on')
-  $('numberField').classList.remove('hidden')
-  $('qrNote').classList.add('hidden')
+
+function stop() {
+  clearInterval(poll); clearInterval(ticker)
+  poll = ticker = null
 }
 
 $('go').onclick = async () => {
   const number = $('num').value.replace(/\D/g, '')
-  if (method === 'pair' && (number.length < 8 || number.length > 15)) {
-    return fail('Enter a valid number with its country code, digits only.')
+  if (method === 'pair') {
+    if (number.length < 8 || number.length > 15) return alert('Enter a valid number with its country code, digits only.')
+    if (number.startsWith('0')) return alert('Drop the leading 0 and use your country code instead.')
   }
-
   $('go').disabled = true
   $('go').textContent = 'Starting…'
-
   try {
     const r = await fetch('/api/session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ method, number })
     })
-    const data = await r.json()
-    if (!r.ok) throw new Error(data.error || 'Could not start a session')
-
-    sessionId = data.id
-    $('linkTitle').textContent = method === 'qr' ? 'Scan the QR code' : 'Enter the pairing code'
-    $('steps').innerHTML = STEPS[method].map((s) => `<li>${s}</li>`).join('')
-    show('linking')
+    const d = await r.json()
+    if (!r.ok) throw new Error(d.error || 'Could not start a session')
+    sessionId = d.id
+    show('live')
+    $('steps').innerHTML = STEPS[method].map((s, i) =>
+      `<div class="step"><div class="step-n">${i + 1}</div><div>${s}</div></div>`).join('')
     startPolling()
   } catch (e) {
     fail(e.message)
   } finally {
     $('go').disabled = false
-    $('go').textContent = 'Generate Session'
+    $('go').textContent = '⚡ Generate Session'
   }
 }
 
@@ -279,7 +640,6 @@ function startPolling() {
     $('timer').textContent = `Expires in ${m}:${String(s).padStart(2, '0')}`
     if (left <= 0) { stop(); fail('This attempt expired. Please start again.') }
   }, 1000)
-
   clearInterval(poll)
   poll = setInterval(check, 1800)
   check()
@@ -292,99 +652,94 @@ async function check() {
     const d = await r.json()
     if (!r.ok) throw new Error(d.error || 'Session lost')
 
-    // trust the server's clock rather than drifting on our own
     if (typeof d.expiresIn === 'number') left = d.expiresIn
 
     $('statusTxt').textContent = {
       starting: 'Connecting to WhatsApp…',
       qr: 'Waiting for you to scan…',
-      pairing: 'Waiting for the code to be entered…',
-      connected: 'Linked. Preparing your session…',
+      pairing: 'Waiting for the code…',
+      connected: 'Linked. Preparing session…',
       done: 'Done.',
       error: 'Failed',
       expired: 'Expired'
     }[d.status] || d.status
 
-    if (d.qrImage) {
-      $('spin').classList.add('hidden')
-      $('qrWrap').classList.remove('hidden')
+    if (d.status === 'qr' && d.qrImage) {
       $('qrImg').src = d.qrImage
+      $('qrBox').classList.remove('hidden')
+      $('spinBox').classList.add('hidden')
+      $('codeBox').classList.add('hidden')
     }
-    if (d.code) {
-      $('spin').classList.add('hidden')
-      $('codeWrap').classList.remove('hidden')
-      $('codeVal').textContent = d.code
+    if (d.status === 'pairing' && d.code) {
+      $('codeTxt').textContent = d.code
+      $('codeBox').classList.remove('hidden')
+      $('spinBox').classList.add('hidden')
+      $('qrBox').classList.add('hidden')
     }
-
-    if (d.status === 'done' && d.creds) {
+    if (d.status === 'connected') {
+      $('qrBox').classList.add('hidden')
+      $('codeBox').classList.add('hidden')
+      $('spinBox').classList.remove('hidden')
+    }
+    if (d.status === 'done' && d.sessionId) {
       stop()
-      $('whoJid').textContent = d.jid ? '+' + d.jid : 'your account'
-      $('sessVal').textContent = d.creds
+      creds = d.sessionId
+      $('sidTxt').textContent = d.sessionId
       show('done')
     }
-    if (d.status === 'error' || d.status === 'expired') {
-      stop()
-      fail(d.error || 'The link attempt ended before it completed.')
-    }
+    if (d.status === 'error') throw new Error(d.error || 'Connection failed')
+    if (d.status === 'expired') throw new Error('This attempt expired. Please start again.')
   } catch (e) {
-    stop()
     fail(e.message)
   }
-}
-
-function stop() { clearInterval(poll); clearInterval(ticker); poll = ticker = null }
-
-function fail(msg) {
-  $('errTxt').textContent = msg
-  show('failed')
 }
 
 $('cancel').onclick = async () => {
   stop()
   if (sessionId) await fetch('/api/session/' + sessionId, { method: 'DELETE' }).catch(() => {})
   sessionId = null
-  resetUi()
-  show('setup')
-}
-
-$('retry').onclick = () => { resetUi(); show('setup') }
-$('again').onclick = () => { resetUi(); show('setup') }
-
-function resetUi() {
-  $('spin').classList.remove('hidden')
-  $('qrWrap').classList.add('hidden')
-  $('codeWrap').classList.add('hidden')
-  $('qrImg').src = ''
-  $('timer').textContent = ''
+  show('form')
 }
 
 $('copy').onclick = async () => {
-  const text = $('sessVal').textContent
   try {
-    await navigator.clipboard.writeText(text)
+    await navigator.clipboard.writeText(creds)
     $('copy').textContent = '✅ Copied'
   } catch {
-    // clipboard API needs https - fall back to a manual selection
     const r = document.createRange()
-    r.selectNodeContents($('sessVal'))
-    const sel = window.getSelection()
-    sel.removeAllRanges(); sel.addRange(r)
-    $('copy').textContent = '👆 Now press Ctrl+C'
+    r.selectNode($('sidTxt'))
+    getSelection().removeAllRanges(); getSelection().addRange(r)
+    document.execCommand('copy')
+    $('copy').textContent = '✅ Copied'
   }
-  setTimeout(() => ($('copy').textContent = '📋 Copy'), 2500)
+  setTimeout(() => $('copy').textContent = '📋 Copy', 1800)
 }
 
-$('download').onclick = () => {
-  const b64 = $('sessVal').textContent
-  let json = b64
-  try { json = atob(b64) } catch {}
-  const blob = new Blob([json], { type: 'application/json' })
-  const a = document.createElement('a')
-  a.href = URL.createObjectURL(blob)
-  a.download = 'creds.json'
-  a.click()
-  URL.revokeObjectURL(a.href)
+$('dl').onclick = () => {
+  try {
+    const json = atob(creds)
+    const blob = new Blob([json], { type: 'application/json' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = 'creds.json'
+    a.click()
+    URL.revokeObjectURL(a.href)
+  } catch {
+    alert('Could not decode the session. Use Copy instead.')
+  }
 }
+
+$('again').onclick = $('retry').onclick = () => {
+  sessionId = null; creds = null
+  $('qrBox').classList.add('hidden')
+  $('codeBox').classList.add('hidden')
+  $('spinBox').classList.remove('hidden')
+  show('form')
+}
+
+window.addEventListener('beforeunload', () => {
+  if (sessionId) navigator.sendBeacon?.('/api/session/' + sessionId + '?beacon=1')
+})
 </script>
 </body>
 </html>
