@@ -203,6 +203,7 @@ let method = 'qr'
 let sessionId = null
 let poll = null
 let ticker = null
+let left = 300   // seconds remaining, kept in sync with the server
 
 const STEPS = {
   qr: [
@@ -270,7 +271,7 @@ $('go').onclick = async () => {
 }
 
 function startPolling() {
-  let left = 300
+  left = 300
   clearInterval(ticker)
   ticker = setInterval(() => {
     left--
@@ -290,6 +291,9 @@ async function check() {
     const r = await fetch('/api/session/' + sessionId)
     const d = await r.json()
     if (!r.ok) throw new Error(d.error || 'Session lost')
+
+    // trust the server's clock rather than drifting on our own
+    if (typeof d.expiresIn === 'number') left = d.expiresIn
 
     $('statusTxt').textContent = {
       starting: 'Connecting to WhatsApp…',
