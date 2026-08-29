@@ -395,7 +395,7 @@
     <div class="sec-head">
       <div class="sec-tag">Step One</div>
       <h2>Link your session</h2>
-      <p>Scan a QR code or type an 8-digit pairing code. Either way you get a session ID for your bot.</p>
+      <p>Scan a QR or enter a pairing code. You get a short <code>VENOM-XXXX-XXXX</code> ID — the bot grabs the rest.</p>
     </div>
 
     <div class="gen">
@@ -425,9 +425,9 @@
         <button id="go" class="btn btn-main">⚡ Generate Session</button>
 
         <div class="trust">
-          <div class="trust-item"><span>🔒</span> Deleted after delivery</div>
-          <div class="trust-item"><span>⏱️</span> Expires in 5 min</div>
-          <div class="trust-item"><span>🚫</span> Never stored</div>
+          <div class="trust-item"><span>🔑</span> Short VENOM-ID</div>
+          <div class="trust-item"><span>📥</span> Bot grabs it once</div>
+          <div class="trust-item"><span>⏱️</span> Code dies in 24h</div>
         </div>
       </div>
 
@@ -452,17 +452,16 @@
       <!-- done -->
       <div id="done" class="stage hidden">
         <div class="ok-mark">✅</div>
-        <h3 style="font-size:1.2rem;font-weight:750">Session ready</h3>
-        <p style="color:var(--dim);font-size:.9rem;margin-top:5px">Also sent to your WhatsApp.</p>
-        <div class="sid" id="sidTxt"></div>
+        <h3 style="font-size:1.2rem;font-weight:750">VENOM session ready</h3>
+        <p style="color:var(--dim);font-size:.9rem;margin-top:5px">Short ID · also sent to your WhatsApp.</p>
+        <div class="code" id="sidTxt" title="Tap to copy" style="margin-top:16px;font-size:clamp(1.35rem,5vw,1.85rem);letter-spacing:3px">VENOM-••••-••••</div>
         <div class="btn-row">
-          <button id="copy" class="btn btn-main btn-sm">📋 Copy</button>
+          <button id="copy" class="btn btn-main btn-sm">📋 Copy ID</button>
           <button id="dl" class="btn btn-ghost btn-sm">⬇️ creds.json</button>
         </div>
         <div class="note note-warn">
           <span>⚠️</span>
-          <div>Paste this as <code>SESSION_ID</code> in your bot's <code>.env</code>.
-          Anyone holding it controls your WhatsApp — never post it publicly.</div>
+          <div>Paste <code>VENOM-XXXX-XXXX</code> as <code>SESSION_ID</code>. Set <code>SESSION_API</code> to this site's URL so the bot can grab it. One-time use.</div>
         </div>
         <button id="again" class="btn btn-ghost btn-sm" style="margin-top:11px;width:100%">Generate another</button>
       </div>
@@ -522,7 +521,7 @@
     </div>
     <div class="deploy">
       <div class="dstep"><div class="dnum">1</div><div><h4>Generate your session</h4>
-        <p>Use the generator above and copy the session ID.</p></div></div>
+        <p>Copy the short <code>VENOM-XXXX-XXXX</code> ID.</p></div></div>
       <div class="dstep"><div class="dnum">2</div><div><h4>Fork the repository</h4>
         <p>Push <code>venom-md-bot</code> to your own GitHub account.</p></div></div>
       <div class="dstep"><div class="dnum">3</div><div><h4>Create a Web Service</h4>
@@ -553,6 +552,7 @@ let poll = null
 let ticker = null
 let left = 300
 let creds = null
+let credsJson = null
 
 const CATS = [
   ['HELP',1], ['AI',22], ['ANIME',10], ['FUN',58],
@@ -684,6 +684,7 @@ async function check() {
     if (d.status === 'done' && d.sessionId) {
       stop()
       creds = d.sessionId
+      credsJson = d.credsJson || null
       $('sidTxt').textContent = d.sessionId
       show('done')
     }
@@ -712,25 +713,27 @@ $('copy').onclick = async () => {
     document.execCommand('copy')
     $('copy').textContent = '✅ Copied'
   }
-  setTimeout(() => $('copy').textContent = '📋 Copy', 1800)
+  setTimeout(() => $('copy').textContent = '📋 Copy ID', 1800)
 }
+
+$('sidTxt').onclick = () => $('copy').click()
 
 $('dl').onclick = () => {
   try {
-    const json = atob(creds)
-    const blob = new Blob([json], { type: 'application/json' })
+    if (!credsJson) throw new Error('no json')
+    const blob = new Blob([credsJson], { type: 'application/json' })
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
     a.download = 'creds.json'
     a.click()
     URL.revokeObjectURL(a.href)
   } catch {
-    alert('Could not decode the session. Use Copy instead.')
+    alert('creds.json is only available for a few minutes after linking. Use the short VENOM-ID instead.')
   }
 }
 
 $('again').onclick = $('retry').onclick = () => {
-  sessionId = null; creds = null
+  sessionId = null; creds = null; credsJson = null
   $('qrBox').classList.add('hidden')
   $('codeBox').classList.add('hidden')
   $('spinBox').classList.remove('hidden')

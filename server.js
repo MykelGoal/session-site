@@ -4,6 +4,7 @@ import path from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
 import { createSession, sessions, publicView, cleanup } from './lib/session.js'
+import { grab, isShortVenomId } from './lib/vault.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
@@ -92,13 +93,28 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true, active: sessions.size, uptime: Math.floor(process.uptime()) })
 })
 
+/* Bot GRABS the real creds once with the short VENOM-XXXX-XXXX code. */
+app.get('/api/grab/:code', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  const code = req.params.code
+  if (!isShortVenomId(code)) {
+    return res.status(400).json({ error: 'Not a VENOM short ID. Expected VENOM-XXXX-XXXX.' })
+  }
+  const creds = grab(code)
+  if (!creds) {
+    return res.status(404).json({ error: 'Unknown, already used, or expired VENOM-ID. Generate a new one.' })
+  }
+  res.json({ ok: true, creds })
+})
+
 /* Express 5 dropped the bare '*' wildcard - use a named splat */
 app.get('/{*any}', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')))
 
-/* clean the tmp folder on boot so restarts never leak old auth data */
+/* wipe pairing tmp on boot — vault/ keeps unclaimed short IDs */
 const TMP = path.join(__dirname, 'tmp')
 fs.rmSync(TMP, { recursive: true, force: true })
 fs.mkdirSync(TMP, { recursive: true })
+fs.mkdirSync(path.join(__dirname, 'vault'), { recursive: true })
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`\n  VENOM MD session generator`)
