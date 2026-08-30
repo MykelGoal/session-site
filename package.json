@@ -7,7 +7,8 @@
   },
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "test": "node --test tests/"
   },
   "keywords": [],
   "author": "",
@@ -19,10 +20,14 @@
     "baileys": "^7.0.0-rc14",
     "express": "^5.2.1",
     "pino": "^10.3.1",
-    "qrcode": "^1.5.4"
+    "qrcode": "^1.5.4",
+    "pg": "^8.13.1"
   },
   "type": "module",
   "engines": {
     "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "pg-mem": "^3.0.0"
   }
 }

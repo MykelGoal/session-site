@@ -5,7 +5,7 @@ import fs from 'fs'
 import { fileURLToPath } from 'url'
 import { createSession, sessions, publicView, cleanup } from './lib/session.js'
 import { grab, isShortVenomId } from './lib/vault.js'
-import { saveBackup, loadBackup, bearerSecret } from './lib/backup.js'
+import { saveBackup, loadBackup, bearerSecret, backupBackend } from './lib/backup.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
@@ -91,7 +91,7 @@ app.delete('/api/session/:id', (req, res) => {
 })
 
 app.get('/api/health', (req, res) => {
-  res.json({ ok: true, active: sessions.size, uptime: Math.floor(process.uptime()) })
+  res.json({ ok: true, active: sessions.size, backups: backupBackend(), uptime: Math.floor(process.uptime()) })
 })
 
 /* Bot GRABS the real creds once with the short VENOM-XXXX-XXXX code. */
@@ -111,25 +111,33 @@ app.get('/api/grab/:code', (req, res) => {
 /* ------------------- per-instance cloud backups ------------------- */
 /* Auth = the instance's own long VENOM~ secret (already in their env). */
 
-app.put('/api/backup', (req, res) => {
+app.put('/api/backup', async (req, res) => {
   const secret = bearerSecret(req)
   if (!secret || !secret.startsWith('VENOM~')) {
     return res.status(401).json({ error: 'Bearer <long VENOM~ session> required.' })
   }
   const blob = req.body?.blob
   if (!blob || typeof blob !== 'object') return res.status(400).json({ error: 'blob object required.' })
-  saveBackup(secret, blob)
-  res.json({ ok: true })
+  try {
+    await saveBackup(secret, blob)
+    res.json({ ok: true })
+  } catch (e) {
+    res.status(500).json({ error: 'Backup save failed.' })
+  }
 })
 
-app.get('/api/backup', (req, res) => {
+app.get('/api/backup', async (req, res) => {
   const secret = bearerSecret(req)
   if (!secret || !secret.startsWith('VENOM~')) {
     return res.status(401).json({ error: 'Bearer <long VENOM~ session> required.' })
   }
-  const blob = loadBackup(secret)
-  if (!blob) return res.status(404).json({ error: 'No backup for this instance yet.' })
-  res.json({ ok: true, blob })
+  try {
+    const blob = await loadBackup(secret)
+    if (!blob) return res.status(404).json({ error: 'No backup for this instance yet.' })
+    res.json({ ok: true, blob })
+  } catch (e) {
+    res.status(500).json({ error: 'Backup read failed.' })
+  }
 })
 
 /* Express 5 dropped the bare '*' wildcard - use a named splat */
