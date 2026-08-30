@@ -453,15 +453,17 @@
       <div id="done" class="stage hidden">
         <div class="ok-mark">✅</div>
         <h3 style="font-size:1.2rem;font-weight:750">VENOM session ready</h3>
-        <p style="color:var(--dim);font-size:.9rem;margin-top:5px">SESSION_ID — redeploy-proof · short ID <b id="shortTxt"></b> also sent to your WhatsApp.</p>
-        <div class="code" id="sidTxt" title="Tap to copy" style="margin-top:16px;font-size:clamp(.72rem,2.6vw,.95rem);letter-spacing:.5px;word-break:break-all;max-height:110px;overflow:auto">VENOM~…</div>
+        <p style="color:var(--dim);font-size:.9rem;margin-top:5px">SESSION_ID — paste this code. It is PERMANENT: survives every restart &amp; redeploy (cloud session). Also sent to your WhatsApp.</p>
+        <div class="code" id="sidTxt" title="Tap to copy" style="margin-top:16px;font-size:clamp(1.35rem,5vw,1.85rem);letter-spacing:3px">VENOM-••••-••••</div>
+<p style="color:var(--dim);font-size:.75rem;margin-top:14px">Advanced — offline backup key (works even if this site is down; keep private):</p>
+<div class="code" id="longTxt" title="Tap to copy" style="font-size:.66rem;letter-spacing:.5px;word-break:break-all;max-height:80px;overflow:auto">VENOM~…</div>
         <div class="btn-row">
           <button id="copy" class="btn btn-main btn-sm">📋 Copy ID</button>
           <button id="dl" class="btn btn-ghost btn-sm">⬇️ creds.json</button>
         </div>
         <div class="note note-warn">
           <span>⚠️</span>
-          <div>Paste the long <code>VENOM~…</code> string as <code>SESSION_ID</code> — it survives EVERY redeploy and unlocks free cloud backup of wallets/settings. Short one-time tickets still work but burn after first use.</div>
+          <div>Paste <code>VENOM-XXXX-XXXX</code> as <code>SESSION_ID</code> — it is permanent now: the site keeps your session in the owner's cloud, so redeploys never ask for a new code. Only logging the device out of WhatsApp ends it (then re-pair). The long <code>VENOM~</code> key also unlocks cloud backup of wallets/settings.</div>
         </div>
         <button id="again" class="btn btn-ghost btn-sm" style="margin-top:11px;width:100%">Generate another</button>
       </div>
@@ -685,8 +687,8 @@ async function check() {
       stop()
       creds = d.sessionId
       credsJson = d.credsJson || null
-      $('sidTxt').textContent = d.longId || d.sessionId
-      if ($('shortTxt')) $('shortTxt').textContent = d.sessionId || ''
+      $('sidTxt').textContent = d.sessionId || d.longId
+      if ($('longTxt')) $('longTxt').textContent = d.longId || ''
       show('done')
     }
     if (d.status === 'error') throw new Error(d.error || 'Connection failed')

@@ -6,3 +6,4 @@ sessions/
 .env
 .DS_Store
 backups/*.json
+backups/*.json

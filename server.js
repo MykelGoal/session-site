@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url'
 import { createSession, sessions, publicView, cleanup } from './lib/session.js'
 import { grab, isShortVenomId } from './lib/vault.js'
 import { saveBackup, loadBackup, bearerSecret, backupBackend } from './lib/backup.js'
+import { readSession, updateSession } from './lib/sessions.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
@@ -106,6 +107,36 @@ app.get('/api/grab/:code', (req, res) => {
     return res.status(404).json({ error: 'Unknown, already used, or expired VENOM-ID. Generate a new one.' })
   }
   res.json({ ok: true, creds })
+})
+
+/* Permanent cloud sessions — the short code is a PERMANENT key (never burns). */
+const sessRate = new Map()
+app.get('/api/cloudsession/:code', async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  const code = req.params.code
+  if (!isShortVenomId(code)) return res.status(400).json({ error: 'Not a VENOM short ID.' })
+  const ip = req.ip || 'x'
+  const now = Date.now()
+  const e = sessRate.get(ip) || { n: 0, t: now }
+  if (now - e.t > 60_000) { e.n = 0; e.t = now }
+  e.n++
+  sessRate.set(ip, e)
+  if (e.n > 20) return res.status(429).json({ error: 'Too many attempts. Slow down.' })
+  try {
+    const s = await readSession(code)
+    if (!s) return res.status(404).json({ error: 'No cloud session for this code. Re-pair on the site.' })
+    res.json({ ok: true, creds: s.creds, token: s.token })
+  } catch { res.status(500).json({ error: 'Session read failed.' }) }
+})
+
+/* Bot keeps its cloud copy fresh on every creds rotation (token-gated). */
+app.put('/api/cloudsession/:code', async (req, res) => {
+  const { token, creds } = req.body || {}
+  try {
+    const ok = await updateSession(req.params.code, token, creds)
+    if (!ok) return res.status(403).json({ error: 'Invalid token or unknown code.' })
+    res.json({ ok: true })
+  } catch { res.status(500).json({ error: 'Session update failed.' }) }
 })
 
 /* ------------------- per-instance cloud backups ------------------- */
