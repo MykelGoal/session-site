@@ -5,6 +5,7 @@ import fs from 'fs'
 import { fileURLToPath } from 'url'
 import { createSession, sessions, publicView, cleanup } from './lib/session.js'
 import { grab, isShortVenomId } from './lib/vault.js'
+import { saveBackup, loadBackup, bearerSecret } from './lib/backup.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
@@ -105,6 +106,30 @@ app.get('/api/grab/:code', (req, res) => {
     return res.status(404).json({ error: 'Unknown, already used, or expired VENOM-ID. Generate a new one.' })
   }
   res.json({ ok: true, creds })
+})
+
+/* ------------------- per-instance cloud backups ------------------- */
+/* Auth = the instance's own long VENOM~ secret (already in their env). */
+
+app.put('/api/backup', (req, res) => {
+  const secret = bearerSecret(req)
+  if (!secret || !secret.startsWith('VENOM~')) {
+    return res.status(401).json({ error: 'Bearer <long VENOM~ session> required.' })
+  }
+  const blob = req.body?.blob
+  if (!blob || typeof blob !== 'object') return res.status(400).json({ error: 'blob object required.' })
+  saveBackup(secret, blob)
+  res.json({ ok: true })
+})
+
+app.get('/api/backup', (req, res) => {
+  const secret = bearerSecret(req)
+  if (!secret || !secret.startsWith('VENOM~')) {
+    return res.status(401).json({ error: 'Bearer <long VENOM~ session> required.' })
+  }
+  const blob = loadBackup(secret)
+  if (!blob) return res.status(404).json({ error: 'No backup for this instance yet.' })
+  res.json({ ok: true, blob })
 })
 
 /* Express 5 dropped the bare '*' wildcard - use a named splat */

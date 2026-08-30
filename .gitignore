@@ -5,3 +5,4 @@ sessions/
 *.log
 .env
 .DS_Store
+backups/*.json
