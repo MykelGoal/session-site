@@ -133,9 +133,9 @@ app.get('/api/cloudsession/:code', async (req, res) => {
 app.put('/api/cloudsession/:code', async (req, res) => {
   const { token, creds } = req.body || {}
   try {
-    const ok = await updateSession(req.params.code, token, creds)
-    if (!ok) return res.status(403).json({ error: 'Invalid token or unknown code.' })
-    res.json({ ok: true })
+    const r = await updateSession(req.params.code, token, creds)
+    if (!r.ok) return res.status(403).json({ error: 'Invalid token.' })
+    res.json({ ok: true, created: !!r.created, token: r.token })
   } catch { res.status(500).json({ error: 'Session update failed.' }) }
 })
 
