@@ -91,8 +91,28 @@ app.delete('/api/session/:id', (req, res) => {
   res.json({ ok: true })
 })
 
-app.get('/api/health', (req, res) => {
-  res.json({ ok: true, active: sessions.size, backups: backupBackend(), uptime: Math.floor(process.uptime()) })
+let dbCheck = { state: 'unchecked', at: 0 }
+async function checkDb() {
+  const u = process.env.BACKUP_DATABASE_URL
+  if (!u) return 'file (no BACKUP_DATABASE_URL set)'
+  if (Date.now() - dbCheck.at < 60_000) return dbCheck.state
+  try {
+    const { Pool } = await import('pg')
+    const p = new Pool({ connectionString: u, ssl: { rejectUnauthorized: false }, connectionTimeoutMillis: 8000 })
+    await p.query('select 1')
+    await p.end()
+    dbCheck = { state: 'ok', at: Date.now() }
+  } catch (e) {
+    const m = String(e.message || '')
+    dbCheck = { state: m.includes('password') || m.includes('authentication')
+      ? 'AUTH FAILED — wrong BACKUP_DATABASE_URL value (check password/URL)'
+      : 'UNREACHABLE — ' + m.slice(0, 80), at: Date.now() }
+  }
+  return dbCheck.state
+}
+
+app.get('/api/health', async (req, res) => {
+  res.json({ ok: true, active: sessions.size, backups: backupBackend(), db: await checkDb(), uptime: Math.floor(process.uptime()) })
 })
 
 /* Bot GRABS the real creds once with the short VENOM-XXXX-XXXX code. */
