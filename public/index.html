@@ -437,7 +437,8 @@
           <div class="qr-frame"><img id="qrImg" alt="WhatsApp QR code"><div class="scanline"></div></div>
         </div>
         <div id="codeBox" class="hidden">
-          <div class="code" id="codeTxt" title="Tap to select">••••-••••</div>
+          <div class="code" id="codeTxt" title="Tap to copy">••••-••••</div>
+          <button id="copyCode" class="btn btn-main btn-sm" style="width:100%;margin-bottom:10px">📋 Copy Code</button>
         </div>
         <div id="spinBox"><div class="spin"></div></div>
 
@@ -720,6 +721,24 @@ $('copy').onclick = async () => {
 }
 
 $('sidTxt').onclick = () => $('copy').click()
+
+$('copyCode').onclick = async () => {
+  const val = $('codeTxt').textContent.trim()
+  if (!val || val.includes('•')) return
+  try {
+    await navigator.clipboard.writeText(val)
+  } catch {
+    const ta = document.createElement('textarea')
+    ta.value = val; ta.style.position = 'fixed'; ta.style.opacity = '0'
+    document.body.appendChild(ta); ta.focus(); ta.select()
+    try { document.execCommand('copy') } catch {}
+    document.body.removeChild(ta)
+  }
+  $('copyCode').textContent = '✅ Copied'
+  setTimeout(() => $('copyCode').textContent = '📋 Copy Code', 1800)
+}
+
+$('codeTxt').onclick = () => $('copyCode').click()
 
 $('dl').onclick = () => {
   try {
